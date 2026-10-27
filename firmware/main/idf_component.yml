@@ -1,0 +1,7 @@
+## IDF Component Manager Manifest File
+dependencies:
+  ## Required IDF version
+  idf:
+    version: '>=5.0'
+  # 如需第三方组件，取消下面注释并按需填写：
+  # espressif/mdns: ^1.11.0

@@ -1,0 +1,46 @@
+# ---------------- 系统与编辑器 ----------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+
+# ---------------- ESP-IDF ----------------
+firmware/build/
+firmware/build_*/
+firmware/managed_components/
+firmware/sdkconfig.old
+firmware/sdkconfig.*.old
+firmware/dependencies.lock.bak
+firmware/tools/Latest-MQTT-Address.txt
+
+# ---------------- Python ----------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# ---------------- 视觉模型与训练产物 ----------------
+ai/model/*.pt
+ai/model/*.onnx
+ai/model/*.engine
+runs/
+yolo11n.pt
+
+# ---------------- 运行期产物 ----------------
+ai/static/latest_capture.jpg
+
+# ---------------- 本地私密配置（不要提交） ----------------
+firmware/components/APP/CONFIG/app_config_local.h
+
+# ---------------- 大体积二进制与媒体文件 ----------------
+*.pptx
+*.docx
+*.pdf
+*.mp4
+*.zip
+*.exe
+*.7z
+*.psd

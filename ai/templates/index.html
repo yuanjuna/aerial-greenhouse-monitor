@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物病虫害识别监控大屏</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <h1>植物病虫害识别监控大屏</h1>
+        </div>
+        <div class="connection" id="connection">连接状态：检测中</div>
+    </header>
+
+    <main class="dashboard">
+        <section class="panel video-panel">
+            <div class="panel-title">
+                <h2>实时画面与识别框</h2>
+                <span id="camera-url">{{ camera_url }}</span>
+            </div>
+            <img class="live-video" src="{{ url_for('video_feed') }}" alt="ESP32-CAM 实时视频流">
+        </section>
+
+        <section class="panel status-panel" id="status-panel">
+            <div class="panel-title">
+                <h2>识别结果</h2>
+                <span id="last-capture-time">-</span>
+            </div>
+
+            <div class="status-card">
+                <span class="label">通用类别</span>
+                <strong id="class-name">健康</strong>
+            </div>
+
+            <div class="status-card">
+                <span class="label">置信度</span>
+                <strong id="confidence">0%</strong>
+                <div class="confidence-bar">
+                    <div id="confidence-fill"></div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <span class="label">模型原始类别</span>
+                <strong id="raw-class">-</strong>
+            </div>
+
+            <div class="status-card warning" id="state-card">
+                <span class="label">当前状态</span>
+                <strong id="status">系统启动中</strong>
+            </div>
+
+            <div class="status-card advice">
+                <span class="label">处理建议</span>
+                <p id="suggestion">请等待系统连接摄像头并完成首次 YOLO 检测。</p>
+            </div>
+
+            <div class="status-card">
+                <span class="label">识别框数量</span>
+                <strong id="box-count">0</strong>
+            </div>
+        </section>
+
+        <section class="panel capture-panel">
+            <div class="panel-title">
+                <h2>最近一次识别截图</h2>
+                <span>每 1 秒检测一次</span>
+            </div>
+            <img id="latest-capture" class="capture-image" src="{{ url_for('static', filename='latest_capture.jpg') }}" alt="最近一次识别截图">
+        </section>
+    </main>
+
+    <script>
+        const classNameText = {
+            pest: "虫害",
+            disease_spot: "病斑",
+            yellow_leaf: "枯黄",
+            healthy: "健康",
+            unknown: "未知异常"
+        };
+
+        function isAlertClass(className) {
+            return ["pest", "disease_spot", "yellow_leaf", "unknown"].includes(className);
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch("/api/status");
+                const data = await response.json();
+                const confidencePercent = Math.round((data.confidence || 0) * 100);
+
+                document.getElementById("class-name").textContent = classNameText[data.class_name] || "未知异常";
+                document.getElementById("confidence").textContent = confidencePercent + "%";
+                document.getElementById("confidence-fill").style.width = confidencePercent + "%";
+                document.getElementById("raw-class").textContent = data.raw_class || "-";
+                document.getElementById("status").textContent = data.status;
+                document.getElementById("suggestion").textContent = data.suggestion;
+                document.getElementById("last-capture-time").textContent = data.last_capture_time;
+                document.getElementById("box-count").textContent = data.box_count;
+
+                const connection = document.getElementById("connection");
+                connection.textContent = data.camera_connected ? "连接状态：正常" : "连接状态：异常";
+                connection.className = data.camera_connected ? "connection ok" : "connection bad";
+
+                const stateCard = document.getElementById("state-card");
+                stateCard.className = isAlertClass(data.class_name) ? "status-card warning alert" : "status-card warning normal";
+
+                const capture = document.getElementById("latest-capture");
+                capture.src = data.latest_capture_url + "?t=" + Date.now();
+            } catch (error) {
+                const connection = document.getElementById("connection");
+                connection.textContent = "连接状态：Flask 接口异常";
+                connection.className = "connection bad";
+            }
+        }
+
+        refreshStatus();
+        setInterval(refreshStatus, 1000);
+    </script>
+</body>
+</html>

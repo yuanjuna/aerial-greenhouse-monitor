@@ -1,0 +1,15 @@
+# 视觉部分依赖（Python 3.10 ~ 3.11 验证通过）
+#
+# 安装方式：
+#   pip install -r requirements.txt
+#
+# 如需 GPU 加速，请先按 PyTorch 官网命令安装对应 CUDA 版本的 torch/torchvision，
+# 再执行上面的命令（避免 pip 装成 CPU 版）：
+#   https://pytorch.org/get-started/locally/
+#
+Flask==3.0.3
+opencv-python==4.10.0.84
+numpy==2.1.1
+ultralytics
+torch
+torchvision
