@@ -1,17 +1,21 @@
-$Port = 1883
+﻿$Port = 1883
 $OutFile = Join-Path $PSScriptRoot "Latest-MQTT-Address.txt"
 
 # MQTT 账号可用环境变量覆盖：$env:MQTT_USER / $env:MQTT_PASS
 $MqttUser = if ($env:MQTT_USER) { $env:MQTT_USER } else { "esp32" }
 $MqttPass = if ($env:MQTT_PASS) { $env:MQTT_PASS } else { "YOUR_MQTT_PASSWORD" }
 
-$config = Get-NetIPConfiguration |
-  Where-Object { $_.NetAdapter.Status -eq "Up" -and $_.IPv4DefaultGateway -ne $null } |
+$route = Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue |
+  Sort-Object RouteMetric, InterfaceMetric |
   Select-Object -First 1
 
-if ($config -and $config.IPv4Address) {
-  $ip = $config.IPv4Address.IPAddress
-} else {
+if ($route) {
+  $ip = (Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue |
+    Where-Object { $_.IPAddress -notlike "169.254.*" } |
+    Select-Object -First 1 -ExpandProperty IPAddress)
+}
+
+if (-not $ip) {
   $ip = (Get-NetIPAddress -AddressFamily IPv4 |
     Where-Object {
       $_.IPAddress -notlike "127.*" -and
